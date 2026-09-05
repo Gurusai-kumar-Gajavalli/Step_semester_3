@@ -1,35 +1,63 @@
-import java.util.Random;
-
 public class p1 {
-    public static String playRound(String playerMove, String computerMove) {
-        if (playerMove.equals(computerMove)) {
-            return "Draw";
+    public static String classifyAccess(String fieldModifier, String accessorContext) {
+        if (fieldModifier.equals("public")) return "ALLOWED";
+        if (fieldModifier.equals("private")) {
+            return accessorContext.equals("SAME_CLASS") ? "ALLOWED" : "DENIED";
         }
-        if ((playerMove.equals("Rock") && computerMove.equals("Scissors")) ||
-            (playerMove.equals("Paper") && computerMove.equals("Rock")) ||
-            (playerMove.equals("Scissors") && computerMove.equals("Paper"))) {
-            return "Player Wins";
+        if (fieldModifier.equals("default")) {
+            return (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) ? "ALLOWED" : "DENIED";
         }
-        return "Computer Wins";
+        if (fieldModifier.equals("protected")) {
+            return (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) ? "ALLOWED" : "DENIED";
+        }
+        return "DENIED";
+    }
+
+    public static String summarizeBatch(String[][] attempts) {
+        int allowed = 0;
+        int denied = 0;
+        for (String[] attempt : attempts) {
+            if (classifyAccess(attempt[0], attempt[1]).equals("ALLOWED")) {
+                allowed++;
+            } else {
+                denied++;
+            }
+        }
+        return "Allowed: " + allowed + " | Denied: " + denied;
+    }
+
+    public static class PatientRecord {
+        private String patientId;
+        String wardCode;
+        protected double vitalsScore;
+        public String facilityName;
+
+        public PatientRecord(String patientId, String wardCode, double vitalsScore, String facilityName) {
+            if (patientId == null || patientId.trim().length() < 4) {
+                throw new IllegalArgumentException("construction rejected");
+            }
+            this.patientId = patientId;
+            this.wardCode = wardCode;
+            this.vitalsScore = vitalsScore;
+            this.facilityName = facilityName;
+        }
     }
 
     public static void main(String[] args) {
-        String[] options = {"Rock", "Paper", "Scissors"};
-        Random random = new Random();
-        String[] playerMoves = {"Rock", "Paper", "Scissors", "Rock", "Paper"};
-        int wins = 0, losses = 0, draws = 0;
+        System.out.println(classifyAccess("private", "SAME_CLASS"));
+        System.out.println(classifyAccess("default", "DIFFERENT_PACKAGE"));
         
-        for (int i = 0; i < 5; i++) {
-            String pMove = playerMoves[i];
-            String cMove = options[random.nextInt(3)];
-            String result = playRound(pMove, cMove);
-            if (result.equals("Player Wins")) wins++;
-            else if (result.equals("Computer Wins")) losses++;
-            else draws++;
-            System.out.println("Round " + (i + 1));
-            System.out.println("Player: " + pMove + ", Computer: " + cMove + "\n" + result + "\n");
+        String[][] batch = {
+            {"protected", "SAME_PACKAGE"},
+            {"protected", "DIFFERENT_PACKAGE"},
+            {"public", "DIFFERENT_PACKAGE"}
+        };
+        System.out.println(summarizeBatch(batch));
+
+        try {
+            new PatientRecord("MT9", "W3", 98.2, "MediTrack Central");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
-        double winPercentage = ((double) wins / 5) * 100;
-        System.out.printf("Final Summary (after 5 rounds)\nWins: %d | Losses: %d | Draws: %d | Win %%=%.1f%%\n", wins, losses, draws, winPercentage);
     }
 }

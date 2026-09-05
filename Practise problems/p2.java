@@ -1,43 +1,44 @@
-public class p2{
-    public static boolean isPalindromeIterative(String text) {
-        int left = 0;
-        int right = text.length() - 1;
-        while (left < right) {
-            if (text.charAt(left) != text.charAt(right)) return false;
-            left++;
-            right--;
+public class p2 {
+    public static String classifyAccess(String fieldModifier, String accessorContext) {
+        if (fieldModifier.equals("public")) return "ALLOWED";
+        
+        if (fieldModifier.equals("private")) {
+            return accessorContext.equals("SAME_CLASS") ? "ALLOWED" : "DENIED";
         }
-        return true;
+        
+        if (fieldModifier.equals("default")) {
+            return (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) ? "ALLOWED" : "DENIED";
+        }
+        
+        if (fieldModifier.equals("protected")) {
+            if (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) return "ALLOWED";
+            if (accessorContext.equals("SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) return "ALLOWED";
+            return "DENIED"; // This correctly denies SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE
+        }
+        
+        return "DENIED";
     }
 
-    public static boolean isPalindromeRecursive(String text) {
-        if (text.length() <= 1) return true;
-        if (text.charAt(0) != text.charAt(text.length() - 1)) return false;
-        return isPalindromeRecursive(text.substring(1, text.length() - 1));
-    }
-
-    public static boolean isPalindromeArrayReversal(String text) {
-        char[] arr = text.toCharArray();
-        int left = 0;
-        int right = arr.length - 1;
-        while (left < right) {
-            char temp = arr[left];
-            arr[left] = arr[right];
-            arr[right] = temp;
-            left++;
-            right--;
+    public static String describeContext(String accessorContext) {
+        String[] words = accessorContext.split("_");
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < words.length; i++) {
+            sb.append(words[i].substring(0, 1).toUpperCase());
+            sb.append(words[i].substring(1).toLowerCase());
+            
+            if (i < words.length - 1) {
+                sb.append(" ");
+            }
         }
-        String reversed = new String(arr);
-        return text.equals(reversed);
+        
+        return sb.toString();
     }
 
     public static void main(String[] args) {
-        String[] tests = {"madam", "hello"};
-        for (String t : tests) {
-            String it = isPalindromeIterative(t) ? "Palindrome" : "Not Palindrome";
-            String rec = isPalindromeRecursive(t) ? "Palindrome" : "Not Palindrome";
-            String arr = isPalindromeArrayReversal(t) ? "Palindrome" : "Not Palindrome";
-            System.out.println("\"" + t + "\" | Iterative: " + it + " | Recursive: " + rec + " | Array Reversal: " + arr);
-        }
+        // Test cases from the problem description
+        System.out.println(classifyAccess("protected", "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"));
+        System.out.println(classifyAccess("protected", "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"));
+        System.out.println(describeContext("SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"));
     }
 }
