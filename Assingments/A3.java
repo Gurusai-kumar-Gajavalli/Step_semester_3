@@ -1,31 +1,16 @@
-public class p3 {
-    public static void findLongestStreak(String signalLog) {
-        if (signalLog == null || signalLog.isEmpty()) return;
-        char longestColor = signalLog.charAt(0);
-        int maxLength = 1;
-        char currentColor = signalLog.charAt(0);
-        int currentLength = 1;
-        for (int i = 1; i < signalLog.length(); i++) {
-            if (signalLog.charAt(i) == currentColor) {
-                currentLength++;
-            } else {
-                if (currentLength > maxLength) {
-                    maxLength = currentLength;
-                    longestColor = currentColor;
-                }
-                currentColor = signalLog.charAt(i);
-                currentLength = 1;
-            }
+// Problem 3: Product Inventory CSV Parser[cite: 13]
+public class A3 {
+    public static void parseInventoryRecord(String csvLine) {
+        String[] fields = csvLine.split(",");
+        if (fields.length == 3) {
+            System.out.println("Product: " + fields[0].trim() + " | SKU: " + fields[1].trim() + " | Qty: " + fields[2].trim());
+        } else {
+            System.out.println("Invalid Record");
         }
-        if (currentLength > maxLength) {
-            maxLength = currentLength;
-            longestColor = currentColor;
-        }
-        System.out.println("Longest Streak: '" + longestColor + "' repeated " + maxLength + " times");
     }
 
     public static void main(String[] args) {
-        findLongestStreak("RRGGGYRR");
-        findLongestStreak("RRRRYYGG");
+        parseInventoryRecord("Wireless Mouse, WM-2201,150");
+        parseInventoryRecord("Wireless Mouse, 150");
     }
 }

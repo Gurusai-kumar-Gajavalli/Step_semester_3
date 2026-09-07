@@ -1,24 +1,28 @@
-public class p5 {
-    public static void classifyWordLengths(String review) {
-        String[] words = review.split("\\s+");
-        int shortCount = 0;
-        int mediumCount = 0;
-        int longCount = 0;
+// Problem 5: Stop-Word-Filtered Word Frequency Report[cite: 13]
+import java.util.*;
+
+public class A5 {
+    public static void printFilteredWordFrequency(String feedback) {
+        List<String> stopWords = Arrays.asList("the", "was", "and", "a", "is", "of", "in");
+        String cleaned = feedback.replace(".", "").replace(",", "").toLowerCase();
+        String[] words = cleaned.split("\\s+");
+        
+        Map<String, Integer> frequencyMap = new HashMap<>();
         for (String word : words) {
-            String cleanWord = word.replaceAll("[^a-zA-Z]", "");
-            int length = cleanWord.length();
-            if (length >= 1 && length <= 4) {
-                shortCount++;
-            } else if (length >= 5 && length <= 8) {
-                mediumCount++;
-            } else if (length >= 9) {
-                longCount++;
+            if (!stopWords.contains(word) && !word.isEmpty()) {
+                frequencyMap.put(word, frequencyMap.getOrDefault(word, 0) + 1);
             }
         }
-        System.out.println("Short: " + shortCount + " | Medium: " + mediumCount + " | Long: " + longCount);
+        
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(frequencyMap.entrySet());
+        list.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+        
+        for (Map.Entry<String, Integer> entry : list) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
     }
 
     public static void main(String[] args) {
-        classifyWordLengths("This movie was absolutely fantastic and thrilling");
+        printFilteredWordFrequency("The mentor was great, the session was great and clear.");
     }
 }
