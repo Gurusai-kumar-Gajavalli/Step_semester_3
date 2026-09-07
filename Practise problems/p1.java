@@ -1,85 +1,47 @@
 public class p1 {
-    public static String classifyAccess(String fieldModifier, String accessorContext) {
-        if (fieldModifier.equals("public")) return "ALLOWED";
-        if (fieldModifier.equals("private")) {
-            return accessorContext.equals("SAME_CLASS") ? "ALLOWED" : "DENIED";
-        }
-        if (fieldModifier.equals("default")) {
-            return (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) ? "ALLOWED" : "DENIED";
-        }
-        if (fieldModifier.equals("protected")) {
-            return (accessorContext.equals("SAME_CLASS") || accessorContext.equals("SAME_PACKAGE")) ? "ALLOWED" : "DENIED";
-        }
-        return "DENIED";
-    }
+    public static class SrmStudent {
+        String name;
+        String regNo;
+        int attendance;
 
-    public static String summarizeBatch(String[][] attempts) {
-        int allowed = 0;
-        int denied = 0;
-        for (String[] attempt : attempts) {
-            if (classifyAccess(attempt[0], attempt[1]).equals("ALLOWED")) {
-                allowed++;
-            } else {
-                denied++;
+        public SrmStudent(String name, String regNo, int attendance) {
+            this.name = name;
+            this.regNo = regNo;
+            this.attendance = attendance;
+        }
+
+        public boolean isEligible() {
+            return attendance >= 75;
+        }
+
+        public void addAttendanceUpdate(int newAttendance) {
+            this.attendance = newAttendance;
+        }
+
+        // Justification: classAverage is static because it computes an aggregate metric 
+        // over multiple students, rather than relying on the state of one specific instance.
+        public static double classAverage(SrmStudent[] students) {
+            if (students.length == 0) return 0;
+            double sum = 0;
+            for (SrmStudent s : students) {
+                sum += s.attendance;
             }
-        }
-        return "Allowed: " + allowed + " | Denied: " + denied;
-    }
-
-    public static class PatientRecord {
-        private String patientId;
-        String wardCode;
-        protected double vitalsScore;
-        public String facilityName;
-
-        public PatientRecord(String patientId, String wardCode, double vitalsScore, String facilityName) {
-            if (patientId == null || patientId.trim().length() < 4) {
-                throw new IllegalArgumentException("construction rejected");
-            }
-            this.patientId = patientId;
-            this.wardCode = wardCode;
-            this.vitalsScore = vitalsScore;
-            this.facilityName = facilityName;
+            return sum / students.length;
         }
     }
 
     public static void main(String[] args) {
-        System.out.println(classifyAccess("private", "SAME_CLASS"));
-        System.out.println(classifyAccess("default", "DIFFERENT_PACKAGE"));
-        
-        String[][] batch = {
-            {"protected", "SAME_PACKAGE"},
-            {"protected", "DIFFERENT_PACKAGE"},
-            {"public", "DIFFERENT_PACKAGE"}
+        SrmStudent[] students = {
+            new SrmStudent("Ravi", "R1", 82),
+            new SrmStudent("Anitha", "R2", 68),
+            new SrmStudent("Karthik", "R3", 91),
+            new SrmStudent("Meera", "R4", 74),
+            new SrmStudent("Suresh", "R5", 60)
         };
-        System.out.println(summarizeBatch(batch));
 
-        try {
-            new PatientRecord("MT9", "W3", 98.2, "MediTrack Central");
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+        for (SrmStudent s : students) {
+            System.out.println(s.name + " " + s.attendance + "% " + (s.isEligible() ? "Eligible" : "Detained"));
         }
-    }
-}// Problem 1: Vowel & Consonant Counter[cite: 14]
-public class p1 {
-    public static void countVowelsAndConsonants(String text) {
-        int vowels = 0, consonants = 0;
-        String lowerText = text.toLowerCase();
-        
-        for (int i = 0; i < lowerText.length(); i++) {
-            char c = lowerText.charAt(i);
-            if (c == ' ') continue;
-            
-            if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u') {
-                vowels++;
-            } else if (c >= 'a' && c <= 'z') {
-                consonants++;
-            }
-        }
-        System.out.println("Vowels: " + vowels + " | Consonants: " + consonants);
-    }
-
-    public static void main(String[] args) {
-        countVowelsAndConsonants("Java Programming");
+        System.out.println("Class average: " + SrmStudent.classAverage(students) + "%");
     }
 }

@@ -1,16 +1,46 @@
-// Problem 3: Product Inventory CSV Parser[cite: 13]
 public class A3 {
-    public static void parseInventoryRecord(String csvLine) {
-        String[] fields = csvLine.split(",");
-        if (fields.length == 3) {
-            System.out.println("Product: " + fields[0].trim() + " | SKU: " + fields[1].trim() + " | Qty: " + fields[2].trim());
+    public static class ParkingSlot {
+        String slotNo;
+        int capacity;
+        int occupiedCount;
+
+        public ParkingSlot(String slotNo, int capacity, int occupiedCount) {
+            this.slotNo = slotNo;
+            this.capacity = capacity;
+            this.occupiedCount = occupiedCount;
+        }
+
+        public void allot(String vehicleNo) {
+            if (occupiedCount < capacity) {
+                occupiedCount++;
+                System.out.println(vehicleNo + " allotted to slot " + slotNo);
+            }
+        }
+    }
+
+    public static ParkingSlot findAvailableSlot(ParkingSlot[] slots) {
+        for (ParkingSlot slot : slots) {
+            if (slot.occupiedCount < slot.capacity) {
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    public static void safeAllot(ParkingSlot[] slots, String vehicleNo) {
+        ParkingSlot available = findAvailableSlot(slots);
+        if (available != null) {
+            available.allot(vehicleNo);
         } else {
-            System.out.println("Invalid Record");
+            System.out.println("No slots available for " + vehicleNo);
         }
     }
 
     public static void main(String[] args) {
-        parseInventoryRecord("Wireless Mouse, WM-2201,150");
-        parseInventoryRecord("Wireless Mouse, 150");
+        ParkingSlot[] slotsAvailable = { new ParkingSlot("A1", 4, 3), new ParkingSlot("A2", 5, 5) };
+        safeAllot(slotsAvailable, "TN09AB1234");
+
+        ParkingSlot[] slotsFull = { new ParkingSlot("A1", 4, 4), new ParkingSlot("A2", 5, 5) };
+        safeAllot(slotsFull, "TN09AB1234");
     }
 }

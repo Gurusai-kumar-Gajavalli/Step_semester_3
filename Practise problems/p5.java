@@ -1,34 +1,87 @@
-// Problem 5: Bank Transaction Reference Generator & Validator[cite: 14]
 public class p5 {
-    public static String normalizeReference(String raw) {
-        String trimmed = raw.trim();
-        if (trimmed.length() < 3) return trimmed;
-        return trimmed.substring(0, 3).toUpperCase() + trimmed.substring(3);
+    
+    // Pulled from P2 to make P5 standalone
+    public static class FeeAccount {
+        private String regNo;
+        private double totalFee;
+        private double amountPaid;
+
+        public FeeAccount(String regNo, double totalFee, double amountPaid) {
+            this.regNo = regNo;
+            this.totalFee = totalFee;
+            this.amountPaid = amountPaid;
+        }
+
+        public void pay(double amount) {
+            if (amount > 0) {
+                this.amountPaid += amount;
+            }
+        }
+
+        public double getDue() {
+            return totalFee - amountPaid;
+        }
     }
 
-    public static String validateAndFormat(String reference) {
-        String normalized = normalizeReference(reference);
-        if (normalized.length() != 14) return "Invalid: wrong length";
-        
-        for (int i = 0; i < 3; i++) {
-            if (!Character.isLetter(normalized.charAt(i))) return "Invalid: bank code must be 3 letters";
+    public static class HostelFeeAccount extends FeeAccount {
+        public HostelFeeAccount(String regNo, double totalFee, double amountPaid) {
+            super(regNo, totalFee, amountPaid);
         }
-        
-        for (int i = 3; i < 14; i++) {
-            if (!Character.isDigit(normalized.charAt(i))) return "Invalid: non-digit in body";
+    }
+
+    // Pulled from P3 to make P5 standalone
+    public static class HostelRoom {
+        String roomNo;
+        int beds;
+        int occupied;
+
+        public HostelRoom(String roomNo, int beds, int occupied) {
+            this.roomNo = roomNo;
+            this.beds = beds;
+            this.occupied = occupied;
         }
-        
-        String bankCode = normalized.substring(0, 3);
-        String date = normalized.substring(3, 5) + "/" + normalized.substring(5, 7) + "/" + normalized.substring(7, 9);
-        String seq = normalized.substring(9);
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("[").append(bankCode).append("] DATE: ").append(date).append(" | SEQ: ").append(seq);
-        return sb.toString();
+    }
+
+    // The Week 3 Practice 5 Capstone Class
+    public static class SrmStudent {
+        String name;
+        String regNo;
+        HostelFeeAccount feeAccount;
+        HostelRoom room;
+
+        static int totalStudents = 0;
+
+        public SrmStudent(String name, String regNo, HostelFeeAccount feeAccount, HostelRoom room) {
+            this.name = name;
+            this.regNo = regNo;
+            this.feeAccount = feeAccount;
+            this.room = room;
+            totalStudents++;
+        }
+
+        public String fullStatus() {
+            String roomDisplay = (room != null) ? room.roomNo : "unallotted";
+            return name + " | Due: Rs " + feeAccount.getDue() + " | Room: " + roomDisplay;
+        }
     }
 
     public static void main(String[] args) {
-        System.out.println(validateAndFormat("   hdf03022600042  "));
-        System.out.println(validateAndFormat("12F03022600042"));
+        HostelRoom r1 = new HostelRoom("C-214", 3, 2);
+        HostelRoom r2 = new HostelRoom("C-507", 2, 1);
+
+        HostelFeeAccount f1 = new HostelFeeAccount("RA1", 200000, 60000);
+        HostelFeeAccount f2 = new HostelFeeAccount("RA2", 200000, 20000);
+        HostelFeeAccount f3 = new HostelFeeAccount("RA3", 200000, 0);
+        
+        f3.pay(-500); // Rejected payment
+
+        SrmStudent s1 = new SrmStudent("Ravi", "RA1", f1, r1);
+        SrmStudent s2 = new SrmStudent("Anitha", "RA2", f2, r2);
+        SrmStudent s3 = new SrmStudent("Karthik", "RA3", f3, null);
+
+        System.out.println(s1.fullStatus());
+        System.out.println(s2.fullStatus());
+        System.out.println(s3.fullStatus());
+        System.out.println("Total students: " + SrmStudent.totalStudents);
     }
 }
