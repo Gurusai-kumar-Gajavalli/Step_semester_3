@@ -1,61 +1,27 @@
 public class A2 {
-    public static class Employee {
-        private String empId;
-        private String empName;
-        private double salary;
+    public static class DeliverySlot {
+        private String orderId;
+        private String timeSlot;
 
-        public Employee(String empId, String empName, double salary) {
-            this.empId = empId;
-            this.empName = empName;
-            this.salary = salary;
+        public DeliverySlot(String orderId, String timeSlot) {
+            this.orderId = orderId;
+            this.timeSlot = timeSlot;
         }
 
-        public double getSalary() {
-            return salary;
-        }
-    }
-
-    public static class ManagerEmployee extends Employee {
-        private double teamBonus;
-
-        public ManagerEmployee(String empId, String empName, double salary, double teamBonus) {
-            super(empId, empName, salary);
-            this.teamBonus = teamBonus;
+        public DeliverySlot(String orderId) {
+            this(orderId, "ASAP");
         }
 
-        public double effectiveSalary() {
-            return getSalary() + teamBonus;
-        }
-    }
-
-    public static class InternEmployee extends Employee {
-        private double stipendCap;
-
-        public InternEmployee(String empId, String empName, double salary, double stipendCap) {
-            super(empId, empName, salary);
-            this.stipendCap = stipendCap;
-        }
-
-        public double effectiveSalary() {
-            return Math.min(getSalary(), stipendCap);
+        public boolean isPeakHour() {
+            return timeSlot.equals("12:00-13:00") || 
+                   timeSlot.equals("13:00-14:00") || 
+                   timeSlot.equals("19:00-20:00") || 
+                   timeSlot.equals("20:00-21:00");
         }
     }
 
     public static void main(String[] args) {
-        Employee plain = new Employee("E1", "John", 40000);
-        ManagerEmployee manager = new ManagerEmployee("M1", "Jane", 70000, 8000);
-        InternEmployee intern = new InternEmployee("I1", "Bob", 12000, 10000);
-
-        Employee[] employees = {plain, manager, intern};
-
-        for (Employee e : employees) {
-            if (e instanceof ManagerEmployee) {
-                System.out.println("Manager effective pay: Rs " + ((ManagerEmployee) e).effectiveSalary());
-            } else if (e instanceof InternEmployee) {
-                System.out.println("Intern effective pay: Rs " + ((InternEmployee) e).effectiveSalary());
-            } else {
-                System.out.println("Plain employee pay: Rs " + e.getSalary());
-            }
-        }
+        System.out.println(new DeliverySlot("ORD101", "13:00-14:00").isPeakHour());
+        System.out.println(new DeliverySlot("ORD102").isPeakHour());
     }
 }

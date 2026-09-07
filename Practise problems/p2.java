@@ -1,66 +1,50 @@
+import java.util.Arrays;
+
 public class p2 {
-    public static class FeeAccount {
-        private String regNo;
-        private double totalFee;
-        private double amountPaid;
+    public static class FareSplitter {
+        private String tripId;
+        private double totalFare;
+        private int passengerCount;
 
-        public FeeAccount(String regNo, double totalFee, double amountPaid) {
-            this.regNo = regNo;
-            this.totalFee = totalFee;
-            this.amountPaid = amountPaid;
-        }
-
-        public void pay(double amount) {
-            if (amount > 0) {
-                this.amountPaid += amount;
+        public FareSplitter(String tripId, double totalFare, int passengerCount) {
+            if (totalFare < 0 || passengerCount <= 0) {
+                throw new IllegalArgumentException("Invalid fare or passenger count");
             }
+            this.tripId = tripId;
+            this.totalFare = totalFare;
+            this.passengerCount = passengerCount;
         }
 
-        public double getDue() {
-            return totalFee - amountPaid;
-        }
-    }
-
-    public static class HostelFeeAccount extends FeeAccount {
-        public HostelFeeAccount(String regNo, double totalFee, double amountPaid) {
-            super(regNo, totalFee, amountPaid);
+        public FareSplitter(String tripId, double totalFare) {
+            this(tripId, totalFare, 1);
         }
 
-        public void payInTwoInstallments(double amount) {
-            pay(amount / 2);
-            pay(amount / 2);
-        }
-    }
-
-    public static class ScholarshipFeeAccount extends FeeAccount {
-        private double scholarshipPercent;
-
-        public ScholarshipFeeAccount(String regNo, double totalFee, double amountPaid, double scholarshipPercent) {
-            super(regNo, totalFee, amountPaid);
-            this.scholarshipPercent = scholarshipPercent;
+        public FareSplitter(String tripId) {
+            this(tripId, 0.0, 1);
         }
 
-        public double effectiveDue() {
-            double originalDue = getDue();
-            return originalDue - (originalDue * (scholarshipPercent / 100));
+        public double[] fareBreakdown() {
+            double[] shares = new double[passengerCount];
+            int totalPaise = (int) Math.round(totalFare * 100);
+            int baseShare = totalPaise / passengerCount;
+            int remainder = totalPaise % passengerCount;
+
+            for (int i = 0; i < passengerCount; i++) {
+                shares[i] = baseShare / 100.0;
+                if (i >= passengerCount - remainder) {
+                    shares[i] = (baseShare + 1) / 100.0;
+                }
+            }
+            return shares;
+        }
+
+        public boolean isConfirmationOverdue(int confirmed, int expected) {
+            return confirmed < expected;
         }
     }
 
     public static void main(String[] args) {
-        FeeAccount plain = new FeeAccount("R1", 150000, 150000);
-        HostelFeeAccount hostel = new HostelFeeAccount("R2", 200000, 60000);
-        ScholarshipFeeAccount scholarship = new ScholarshipFeeAccount("R3", 180000, 0, 20);
-
-        FeeAccount[] accounts = {plain, hostel, scholarship};
-
-        for (FeeAccount acc : accounts) {
-            if (acc instanceof ScholarshipFeeAccount) {
-                System.out.println("Scholarship account effective due: Rs " + ((ScholarshipFeeAccount) acc).effectiveDue());
-            } else if (acc instanceof HostelFeeAccount) {
-                System.out.println("Hostel account due: Rs " + acc.getDue());
-            } else {
-                System.out.println("Plain account due: Rs " + acc.getDue());
-            }
-        }
+        System.out.println(Arrays.toString(new FareSplitter("TRIP001", 100000, 3).fareBreakdown()));
+        System.out.println(Arrays.toString(new FareSplitter("TRIP003").fareBreakdown()));
     }
 }

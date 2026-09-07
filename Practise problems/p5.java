@@ -1,87 +1,107 @@
 public class p5 {
-    
-    // Pulled from P2 to make P5 standalone
-    public static class FeeAccount {
-        private String regNo;
-        private double totalFee;
-        private double amountPaid;
+    public static final class BoardingPenaltyCalculator {
+        private final double minimumPenaltyPercent;
 
-        public FeeAccount(String regNo, double totalFee, double amountPaid) {
-            this.regNo = regNo;
-            this.totalFee = totalFee;
-            this.amountPaid = amountPaid;
+        public BoardingPenaltyCalculator(double minimumPenaltyPercent) {
+            this.minimumPenaltyPercent = minimumPenaltyPercent;
         }
 
-        public void pay(double amount) {
-            if (amount > 0) {
-                this.amountPaid += amount;
+        public final double calculatePenalty(double ticketFare, int minutesLate) {
+            if (ticketFare < 0 || minutesLate < 0) {
+                throw new IllegalArgumentException("Values cannot be negative");
             }
-        }
+            if (minutesLate == 0) return 0.0;
 
-        public double getDue() {
-            return totalFee - amountPaid;
-        }
-    }
+            double penalty = 0.0;
+            int remainingMinutes = minutesLate;
 
-    public static class HostelFeeAccount extends FeeAccount {
-        public HostelFeeAccount(String regNo, double totalFee, double amountPaid) {
-            super(regNo, totalFee, amountPaid);
-        }
-    }
+            if (remainingMinutes > 15) {
+                penalty += (remainingMinutes - 15) * 0.02 * ticketFare;
+                remainingMinutes = 15;
+            }
+            if (remainingMinutes > 5) {
+                penalty += (remainingMinutes - 5) * 0.01 * ticketFare;
+                remainingMinutes = 5;
+            }
+            if (remainingMinutes > 0) {
+                penalty += remainingMinutes * 0.005 * ticketFare;
+            }
 
-    // Pulled from P3 to make P5 standalone
-    public static class HostelRoom {
-        String roomNo;
-        int beds;
-        int occupied;
-
-        public HostelRoom(String roomNo, int beds, int occupied) {
-            this.roomNo = roomNo;
-            this.beds = beds;
-            this.occupied = occupied;
+            double minimumFloor = ticketFare * (minimumPenaltyPercent / 100.0);
+            return Math.max(penalty, minimumFloor);
         }
     }
 
-    // The Week 3 Practice 5 Capstone Class
-    public static class SrmStudent {
-        String name;
-        String regNo;
-        HostelFeeAccount feeAccount;
-        HostelRoom room;
-
-        static int totalStudents = 0;
-
-        public SrmStudent(String name, String regNo, HostelFeeAccount feeAccount, HostelRoom room) {
-            this.name = name;
-            this.regNo = regNo;
-            this.feeAccount = feeAccount;
-            this.room = room;
-            totalStudents++;
+    public static class BusTicketAccount {
+        String bookingId;
+        double ticketFare;
+        
+        static final String DEPOT_SYSTEM_ID;
+        static {
+            DEPOT_SYSTEM_ID = "DEPOT-001";
         }
 
-        public String fullStatus() {
-            String roomDisplay = (room != null) ? room.roomNo : "unallotted";
-            return name + " | Due: Rs " + feeAccount.getDue() + " | Room: " + roomDisplay;
+        public BusTicketAccount(String bookingId, double ticketFare) {
+            this.bookingId = bookingId;
+            this.ticketFare = ticketFare;
         }
+
+        public BusTicketAccount(String bookingId) {
+            this(bookingId, 0.0);
+        }
+
+        public final double calculatePenalty(int minutesLate) {
+            return new BoardingPenaltyCalculator(1.0).calculatePenalty(ticketFare, minutesLate);
+        }
+    }
+
+    public static class SleeperAccount extends BusTicketAccount {
+        public SleeperAccount(String bookingId, double ticketFare) {
+            super(bookingId, ticketFare);
+        }
+    }
+
+    public static void processAccount(BusTicketAccount account, double amount, int minutesLate) {
+    }
+
+    public static void processBatch(BusTicketAccount[] accounts, double[] amounts, int[] minutesLateArray) {
+        if (accounts.length != amounts.length || accounts.length != minutesLateArray.length) {
+            throw new IllegalArgumentException("Batch array lengths must match identically.");
+        }
+
+        int processed = 0, nullSkipped = 0, sleeperCount = 0, regularCount = 0;
+        double grandTotalPenalties = 0.0;
+
+        for (int i = 0; i < accounts.length; i++) {
+            if (accounts[i] == null) {
+                nullSkipped++;
+                continue;
+            }
+            
+            processed++;
+            if (accounts[i] instanceof SleeperAccount) {
+                sleeperCount++;
+            } else {
+                regularCount++;
+            }
+            
+            grandTotalPenalties += accounts[i].calculatePenalty(minutesLateArray[i]);
+            processAccount(accounts[i], amounts[i], minutesLateArray[i]);
+        }
+        
+        System.out.println(processed + " processed | " + nullSkipped + " null skipped | " + 
+                           sleeperCount + " sleeper | " + regularCount + " regular | grand total penalties = Rs " + grandTotalPenalties);
     }
 
     public static void main(String[] args) {
-        HostelRoom r1 = new HostelRoom("C-214", 3, 2);
-        HostelRoom r2 = new HostelRoom("C-507", 2, 1);
+        BusTicketAccount[] accounts = {
+            new SleeperAccount("BK001", 2000),
+            null,
+            new BusTicketAccount("BK002", 1200)
+        };
+        double[] amounts = {1200, 900, 700};
+        int[] minutesLateArray = {10, 5, 0};
 
-        HostelFeeAccount f1 = new HostelFeeAccount("RA1", 200000, 60000);
-        HostelFeeAccount f2 = new HostelFeeAccount("RA2", 200000, 20000);
-        HostelFeeAccount f3 = new HostelFeeAccount("RA3", 200000, 0);
-        
-        f3.pay(-500); // Rejected payment
-
-        SrmStudent s1 = new SrmStudent("Ravi", "RA1", f1, r1);
-        SrmStudent s2 = new SrmStudent("Anitha", "RA2", f2, r2);
-        SrmStudent s3 = new SrmStudent("Karthik", "RA3", f3, null);
-
-        System.out.println(s1.fullStatus());
-        System.out.println(s2.fullStatus());
-        System.out.println(s3.fullStatus());
-        System.out.println("Total students: " + SrmStudent.totalStudents);
+        processBatch(accounts, amounts, minutesLateArray);
     }
 }

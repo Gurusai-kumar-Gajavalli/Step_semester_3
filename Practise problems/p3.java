@@ -1,48 +1,56 @@
+import java.util.Arrays;
+
 public class p3 {
-    public static class HostelRoom {
-        String roomNo;
-        int beds;
-        int occupied;
+    public static class BusRoute implements Comparable<BusRoute> {
+        private String routeCode;
+        private String routeName;
+        private int priority;
 
-        public HostelRoom(String roomNo, int beds, int occupied) {
-            this.roomNo = roomNo;
-            this.beds = beds;
-            this.occupied = occupied;
+        public BusRoute(String routeCode, String routeName, int priority) {
+            this.routeCode = routeCode;
+            this.routeName = routeName;
+            this.priority = priority;
         }
 
-        public void allot(String name) {
-            if (occupied < beds) {
-                occupied++;
-                System.out.println(name + " allotted to room " + roomNo);
-            }
+        public BusRoute(String routeCode, String routeName) {
+            this(routeCode, routeName, 5); 
+        }
+
+        @Override
+        public int compareTo(BusRoute other) {
+            int priorityCompare = Integer.compare(other.priority, this.priority);
+            if (priorityCompare != 0) return priorityCompare;
+
+            int codeCompare = this.routeCode.compareToIgnoreCase(other.routeCode);
+            if (codeCompare != 0) return codeCompare;
+
+            return Integer.compare(this.routeName.length(), other.routeName.length());
         }
     }
 
-    public static HostelRoom findAvailableRoom(HostelRoom[] rooms) {
-        for (HostelRoom room : rooms) {
-            if (room.occupied < room.beds) {
-                return room;
+    public static BusRoute[] rankRoutes(BusRoute[] routes) {
+        BusRoute[] sorted = Arrays.copyOf(routes, routes.length);
+        for (int i = 0; i < sorted.length - 1; i++) {
+            for (int j = i + 1; j < sorted.length; j++) {
+                if (sorted[i].compareTo(sorted[j]) > 0) {
+                    BusRoute temp = sorted[i];
+                    sorted[i] = sorted[j];
+                    sorted[j] = temp;
+                }
             }
         }
-        return null;
-    }
-
-    // Justification: Passing the array does not copy the rooms because Java passes object 
-    // references by value. The array holds references pointing to the original room objects in memory.
-    public static void safeAllot(HostelRoom[] rooms, String studentName) {
-        HostelRoom available = findAvailableRoom(rooms);
-        if (available != null) {
-            available.allot(studentName);
-        } else {
-            System.out.println("No rooms available for " + studentName);
-        }
+        return sorted;
     }
 
     public static void main(String[] args) {
-        HostelRoom[] slotsAvailable = { new HostelRoom("C-214", 3, 2), new HostelRoom("C-507", 2, 2) };
-        safeAllot(slotsAvailable, "Divya");
-
-        HostelRoom[] slotsFull = { new HostelRoom("C-214", 3, 3), new HostelRoom("C-507", 2, 2) };
-        safeAllot(slotsFull, "Divya");
+        BusRoute[] routes = {
+            new BusRoute("RT205L", "Airport Express", 3),
+            new BusRoute("rt201j", "City Central", 4),
+            new BusRoute("RT299T", "Night Service")
+        };
+        BusRoute[] ranked = rankRoutes(routes);
+        for (BusRoute r : ranked) {
+            System.out.print("\"" + r.routeCode + "\" ");
+        }
     }
 }

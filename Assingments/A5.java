@@ -1,48 +1,107 @@
 public class A5 {
-    public static class CompanyEmployeeRecord {
-        String name;
-        String empId;
-        A2.Employee employee;
-        A3.ParkingSlot slot;
+    public static final class SurgeFeeCalculator {
+        private final double minimumSurgePercent;
 
-        static int totalRecords = 0;
-
-        public CompanyEmployeeRecord(String name, String empId, A2.Employee employee, A3.ParkingSlot slot) {
-            this.name = name;
-            this.empId = empId;
-            this.employee = employee;
-            this.slot = slot;
-            totalRecords++;
+        public SurgeFeeCalculator(double minimumSurgePercent) {
+            this.minimumSurgePercent = minimumSurgePercent;
         }
 
-        public String fullProfile() {
-            double pay = employee.getSalary();
-            if (employee instanceof A2.ManagerEmployee) {
-                pay = ((A2.ManagerEmployee) employee).effectiveSalary();
-            } else if (employee instanceof A2.InternEmployee) {
-                pay = ((A2.InternEmployee) employee).effectiveSalary();
+        public final double calculateSurgeFee(double orderValue, int delayMinutes) {
+            if (orderValue < 0 || delayMinutes < 0) {
+                throw new IllegalArgumentException("Values cannot be negative");
+            }
+            if (delayMinutes == 0) return 0.0;
+
+            double fee = 0.0;
+            int remainingMinutes = delayMinutes;
+
+            if (remainingMinutes > 15) {
+                fee += (remainingMinutes - 15) * 0.02 * orderValue;
+                remainingMinutes = 15;
+            }
+            if (remainingMinutes > 5) {
+                fee += (remainingMinutes - 5) * 0.01 * orderValue;
+                remainingMinutes = 5;
+            }
+            if (remainingMinutes > 0) {
+                fee += remainingMinutes * 0.005 * orderValue;
             }
 
-            String slotDisplay = (slot != null) ? slot.slotNo : "no parking assigned";
-            return name + " | Pay: Rs " + pay + " | Slot: " + slotDisplay;
+            double minimumFloor = orderValue * (minimumSurgePercent / 100.0);
+            return Math.max(fee, minimumFloor);
         }
     }
 
+    public static class DeliveryAccount {
+        String studentId;
+        double orderValue;
+        
+        static final String BATCH_ID;
+        static {
+            BATCH_ID = "RECON-NIGHTLY";
+        }
+
+        public DeliveryAccount(String studentId, double orderValue) {
+            this.studentId = studentId;
+            this.orderValue = orderValue;
+        }
+
+        public DeliveryAccount(String studentId) {
+            this(studentId, 0.0);
+        }
+
+        public final double calculateSurgeFee(int delayMinutes) {
+            return new SurgeFeeCalculator(1.0).calculateSurgeFee(orderValue, delayMinutes);
+        }
+    }
+
+    public static class Premium extends DeliveryAccount {
+        public Premium(String studentId, double orderValue) {
+            super(studentId, orderValue);
+        }
+    }
+
+    public static void processAccount(DeliveryAccount account, double amount, int delayMinutes) {
+    }
+
+    public static void processBatch(DeliveryAccount[] accounts, double[] amounts, int[] delayMinutesArray) {
+        if (accounts.length != amounts.length || accounts.length != delayMinutesArray.length) {
+            throw new IllegalArgumentException("Parallel arrays must have matching lengths.");
+        }
+
+        int processed = 0, nullSkipped = 0, premiumCount = 0, regularCount = 0;
+        double grandTotalSurgeFees = 0.0;
+
+        for (int i = 0; i < accounts.length; i++) {
+            if (accounts[i] == null) {
+                nullSkipped++;
+                continue;
+            }
+            
+            processed++;
+            if (accounts[i] instanceof Premium) {
+                premiumCount++;
+            } else {
+                regularCount++;
+            }
+            
+            grandTotalSurgeFees += accounts[i].calculateSurgeFee(delayMinutesArray[i]);
+            processAccount(accounts[i], amounts[i], delayMinutesArray[i]);
+        }
+        
+        System.out.println(processed + " processed | " + nullSkipped + " null skipped | " + 
+                           premiumCount + " premium | " + regularCount + " regular | grand total surge fees = Rs " + grandTotalSurgeFees);
+    }
+
     public static void main(String[] args) {
-        A2.ManagerEmployee m = new A2.ManagerEmployee("E1", "Divya", 70000, 8000);
-        A2.Employee e = new A2.Employee("E2", "Karan", 40000);
-        A2.InternEmployee i = new A2.InternEmployee("E3", "Meera", 12000, 10000);
+        DeliveryAccount[] accounts = {
+            new Premium("STU001", 500),
+            null,
+            new DeliveryAccount("STU002", 300)
+        };
+        double[] amounts = {500, 400, 300};
+        int[] delayMinutesArray = {10, 5, 0};
 
-        A3.ParkingSlot s1 = new A3.ParkingSlot("A1", 1, 1);
-        A3.ParkingSlot s2 = new A3.ParkingSlot("A2", 1, 1);
-
-        CompanyEmployeeRecord r1 = new CompanyEmployeeRecord("Divya", "E1", m, s1);
-        CompanyEmployeeRecord r2 = new CompanyEmployeeRecord("Karan", "E2", e, s2);
-        CompanyEmployeeRecord r3 = new CompanyEmployeeRecord("Meera", "E3", i, null);
-
-        System.out.println(r1.fullProfile());
-        System.out.println(r2.fullProfile());
-        System.out.println(r3.fullProfile());
-        System.out.println("Total records: " + CompanyEmployeeRecord.totalRecords);
+        processBatch(accounts, amounts, delayMinutesArray);
     }
 }

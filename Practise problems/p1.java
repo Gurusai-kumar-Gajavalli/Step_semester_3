@@ -1,47 +1,55 @@
+import java.util.HashSet;
+
 public class p1 {
-    public static class SrmStudent {
-        String name;
-        String regNo;
-        int attendance;
+    public static class BusTicket {
+        private String passengerName;
+        private String destination;
+        private boolean checkedIn = false;
 
-        public SrmStudent(String name, String regNo, int attendance) {
-            this.name = name;
-            this.regNo = regNo;
-            this.attendance = attendance;
-        }
-
-        public boolean isEligible() {
-            return attendance >= 75;
-        }
-
-        public void addAttendanceUpdate(int newAttendance) {
-            this.attendance = newAttendance;
-        }
-
-        // Justification: classAverage is static because it computes an aggregate metric 
-        // over multiple students, rather than relying on the state of one specific instance.
-        public static double classAverage(SrmStudent[] students) {
-            if (students.length == 0) return 0;
-            double sum = 0;
-            for (SrmStudent s : students) {
-                sum += s.attendance;
+        public BusTicket(String passengerName, String destination) {
+            if (passengerName == null || passengerName.trim().isEmpty() || 
+                destination == null || destination.trim().isEmpty()) {
+                throw new IllegalArgumentException("Invalid input");
             }
-            return sum / students.length;
+            this.passengerName = passengerName;
+            this.destination = destination;
+        }
+
+        public void markCheckedIn() {
+            if (!checkedIn) {
+                checkedIn = true;
+            } else {
+                System.out.println("Ticket already checked in.");
+            }
         }
     }
 
-    public static void main(String[] args) {
-        SrmStudent[] students = {
-            new SrmStudent("Ravi", "R1", 82),
-            new SrmStudent("Anitha", "R2", 68),
-            new SrmStudent("Karthik", "R3", 91),
-            new SrmStudent("Meera", "R4", 74),
-            new SrmStudent("Suresh", "R5", 60)
-        };
+    public static void processBatch(String[][] rawBookings) {
+        int valid = 0;
+        int rejected = 0;
+        int duplicates = 0;
+        HashSet<String> seenBookings = new HashSet<>();
 
-        for (SrmStudent s : students) {
-            System.out.println(s.name + " " + s.attendance + "% " + (s.isEligible() ? "Eligible" : "Detained"));
+        for (String[] raw : rawBookings) {
+            try {
+                BusTicket ticket = new BusTicket(raw[0], raw[1]);
+                String uniqueKey = ticket.passengerName.trim().toLowerCase() + "|" + ticket.destination.trim().toLowerCase();
+                
+                if (seenBookings.contains(uniqueKey)) {
+                    duplicates++;
+                } else {
+                    seenBookings.add(uniqueKey);
+                    valid++;
+                }
+            } catch (Exception e) {
+                rejected++;
+            }
         }
-        System.out.println("Class average: " + SrmStudent.classAverage(students) + "%");
+        System.out.println("Valid: " + valid + " | Rejected: " + rejected + " | Duplicates skipped: " + duplicates);
+    }
+
+    public static void main(String[] args) {
+        String[][] input = {{"Divya", "Chennai"}, {"", "Bangalore"}, {"Ravi123", "Pune"}, {"Divya", "Chennai"}, {" ", " "}};
+        processBatch(input);
     }
 }

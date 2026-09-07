@@ -1,43 +1,41 @@
 public class p4 {
-    /* 
-       BROKEN VERSION:
-       class BrokenStudent {
-           static String name; // Wrong: Name is unique to each student, static shares it globally.
-           static String regNo; // Wrong: Registration number must be unique per student.
-           static int attendance; // Wrong: Each student has their own attendance record.
-       }
-    */
+    public static final class BoardingPenaltyCalculator {
+        private final double minimumPenaltyPercent;
 
-    public static class SrmStudent {
-        String name;
-        String regNo;
-        int attendance;
-        
-        static String university = "SRMIST";
-        static int admissionCount = 0;
-
-        public SrmStudent(String name, int attendance) {
-            this.name = name;
-            this.attendance = attendance;
-            admissionCount++;
-            this.regNo = "RA23110030101" + admissionCount;
+        public BoardingPenaltyCalculator(double minimumPenaltyPercent) {
+            this.minimumPenaltyPercent = minimumPenaltyPercent;
         }
 
-        public void printIdCard() {
-            System.out.println(name + " | " + regNo);
-        }
+        public final double calculatePenalty(double ticketFare, int minutesLate) {
+            if (ticketFare < 0 || minutesLate < 0) {
+                throw new IllegalArgumentException("Values cannot be negative");
+            }
+            if (minutesLate == 0) return 0.0;
 
-        public static void printTotalAdmissions() {
-            System.out.println("Students admitted so far: " + admissionCount);
+            double penalty = 0.0;
+            int remainingMinutes = minutesLate;
+
+            if (remainingMinutes > 15) {
+                penalty += (remainingMinutes - 15) * 0.02 * ticketFare;
+                remainingMinutes = 15;
+            }
+            if (remainingMinutes > 5) {
+                penalty += (remainingMinutes - 5) * 0.01 * ticketFare;
+                remainingMinutes = 5;
+            }
+            if (remainingMinutes > 0) {
+                penalty += remainingMinutes * 0.005 * ticketFare;
+            }
+
+            double minimumFloor = ticketFare * (minimumPenaltyPercent / 100.0);
+            return Math.max(penalty, minimumFloor);
         }
     }
 
     public static void main(String[] args) {
-        SrmStudent s1 = new SrmStudent("Ravi", 80);
-        SrmStudent s2 = new SrmStudent("Meera", 90);
-        
-        s1.printIdCard();
-        s2.printIdCard();
-        SrmStudent.printTotalAdmissions();
+        BoardingPenaltyCalculator calc = new BoardingPenaltyCalculator(1.0);
+        System.out.println("Rs " + calc.calculatePenalty(1000, 0));
+        System.out.println("Rs " + calc.calculatePenalty(1000, 1));
+        System.out.println("Rs " + calc.calculatePenalty(1000, 16));
     }
 }
